@@ -1,0 +1,19 @@
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /Users/cui/.minikube/ca.crt
+    server: https://192.168.64.9:8443
+  name: minikube
+contexts:
+- context:
+    cluster: minikube
+    user: minikube
+  name: minikube
+current-context: minikube
+kind: Config
+preferences: {}
+users:
+- name: minikube
+  user:
+    client-certificate: /Users/cui/.minikube/client.crt
+    client-key: /Users/cui/.minikube/client.key
