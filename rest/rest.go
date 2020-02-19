@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/cuizihan/launcher/typed"
@@ -9,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 // PodIP给出了任务名到Pod ip到映射
@@ -56,18 +58,17 @@ func (l *NNILauncher) GetLog(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, `{"message":"Waiting"}`)
 		return
 	}
-	log, err := http.Get("http://" + pod.Status.PodIP + ":8000/api/v1/nni/metric - data/")
+	url := "http://" + pod.Status.PodIP + ":8000/api/v1/nni/metric-data/"
+	content, err := fetchURL(url)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Get log failed:%v\n", err)
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, `{"message":"Get log failed"}`)
 		return
 	}
-	content, err := ioutil.ReadAll(log.Body)
-	defer log.Body.Close()
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, `{"message":"GetLog succeed", "content":`)
-	fmt.Fprint(w, string(content))
+	fmt.Fprint(w, content)
 	fmt.Fprint(w, "}")
 }
 
@@ -77,4 +78,15 @@ func (l *NNILauncher) DeleteExperiment(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(string(body))
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, `{"message":"Delete called"}`)
+}
+
+func fetchURL(url string) (string, error) {
+	cmd := exec.Command("curl", url)
+	var buffer bytes.Buffer
+	cmd.Stdout = &buffer
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return buffer.String(), nil
 }
