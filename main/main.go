@@ -3,13 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	myrest "github.com/cuizihan/launcher/rest"
+	myrest "github.com/cuizihan/launcher/handler"
 	"github.com/gorilla/mux"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"log"
 	"net/http"
-	"os"
 )
 
 func main() {
@@ -33,7 +32,7 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	nnilauncher := myrest.NNILauncher{Clientset: clientset}
+	nnilauncher := myrest.NNILauncher{Clientset: clientset, PodIPCache: make(map[string]string)}
 
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
@@ -48,11 +47,4 @@ func main() {
 	fmt.Printf("Listen on %s.\n", addr)
 	log.Fatal(http.ListenAndServe(addr, r))
 
-}
-
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
 }

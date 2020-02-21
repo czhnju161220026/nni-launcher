@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: nni-manager
+  name: nni-manager-dep
+  namespace: nni-resource
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nni-manager-pod
+  template:
+    metadata:
+      namespace: nni-resource
+      labels:
+        app: nni-manager-pod
+    spec:
+      containers:
+        - image: czh1998/nni-launcher:1.0
+          #- image: czh1998/hello-kube
+          name: worker
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          command: ["./launcher/main/main"]
+          #command: [ "/bin/bash", "-c", "--" ]
+          #args: [ "while true; do sleep 30; done;" ]
+          #command: ["node","server.js"]

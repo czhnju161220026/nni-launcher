@@ -11,18 +11,19 @@ import (
 
 type NNIExperiment struct {
 	User        string      `json:"user"`
-	Name        string      `json:"name"`
+	WorkSpace   string      `json:"workspace"`
 	GPU         int         `json:"gpuNum"`
 	Concurrency int         `json:"trailConcurrency"`
 	Target      string      `json:"target"`
 	CMD         string      `json:"command"`
 	SearchSpace interface{} `json:"search_space"`
 	Num         int         `json:"num"`
+	ExpID       string
 }
 
 func (j NNIExperiment) String() string {
-	res := fmt.Sprintf("User:%s\nName:%s\nGPU:%s\nConcurrcy:%s\nTarget:%s\nCMD:%s\nNUM:%s\nSearchSpace:%s\n",
-		j.User, j.Name, string(j.GPU), string(j.Concurrency), j.Target, j.CMD, j.Num, j.GetSearchSpaceJson())
+	res := fmt.Sprintf("User:%s\nWorkspace:%s\nGPU:%s\nConcurrcy:%s\nTarget:%s\nCMD:%s\nNUM:%s\nSearchSpace:%s\n",
+		j.User, j.WorkSpace, string(j.GPU), string(j.Concurrency), j.Target, j.CMD, j.Num, j.GetSearchSpaceJson())
 	return res
 }
 
@@ -42,7 +43,7 @@ func (j NNIExperiment) CreatePod(clientset *kubernetes.Clientset) (*apiv1.Pod, e
 			APIVersion: "v1",
 		},
 		ObjectMeta: v1.ObjectMeta{
-			Name:      j.Name,
+			Name:      j.WorkSpace + "-" + j.ExpID,
 			Namespace: "nnijob",
 		},
 		Spec: apiv1.PodSpec{

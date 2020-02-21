@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nni-launcher
+  namespace: nni-resource
+spec:
+  containers:
+    - name: nni-launcher-container
+      image: czh1998/nni-launcher:0.2
+      imagePullPolicy: IfNotPresent
+      command: [ "/bin/bash", "-c", "--" ]
+      args: [ "while true; do sleep 30; done;" ]
