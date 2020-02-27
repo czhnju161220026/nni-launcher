@@ -15,61 +15,120 @@
 
 ## 用法
 
-目前nni launcher已经打包成镜像 czh1998/nni-launcher:0.8，假设已经部署在了集群中。
+### 准备
 
-目前，创建任务是从已有的镜像 czh1998/nni-demo:0.2创建，代码已经打包在了镜像中，真实的使用应该是代码和数据通过PV挂载到容器中。
++ 需要Kubernetes集群
 
-### 创建一个任务
++ 需要拉取镜像：
 
-发送一个Post的请求到 http://service-ip:service-port/api/v1/, 需要在request body中包含创建任务需要的必要信息，例如：
+  ``` shell
+  docker pull czh1998/nni-launcher:1.0
+  docker pull czh1998/nni-demo:0.3
+  ```
 
-``` json
-{
-    "user": "cuizihan",
-    "workspace": "test",
-    "trailConcurrency": 2,
-    "num": 30,
-    "target": "maximize",
-    "command": "python3 train.py",
-    "gpuNum": 0,
-    "search_space": {
-        "solver": {
-            "_type": "choice",
-            "_value": [
-                "svd","cholesky","sparse_cg","sag","lsqr"
-            ]
-        },
-        "alpha": {
-            "_type": "choice",
-            "_value": [
-                1,0.5,0.1,0.01,5
-            ]
-        },
-        "max_iter": {
-            "_type": "choice",
-            "_value": [
-                1, 10, 15, 20
-            ]
-        }
-    }
-}
-```
-会在response中给出这个job的id。
++ 创建命名空间
 
-### 查询调参过程
+  ``` shell
+  kubectl create namespace nni-resource
+  kubectl create namespace nni-exp # 提交的nni任务的pod都在这个空间里
+  ```
 
-发送Get请求到 http://service-ip:service-port/api/v1/?workspace=xxx&id=xxx
++ 部署nni-launcher
 
-在参数中给出工作区名和job的id。
+  ``` shell
+  # 找到位于template中的yaml文件
+  kubectl apply -f dep.yaml
+  kubectl apply -f service.yaml
+  
+  ```
 
+  创建service后，执行如下命令，查看服务从哪个端口暴露
 
- 
+  ``` shell
+  kubectl get svc -n nni-resource
+  ```
 
-### 删除某个任务
+  
 
-发送Delete请求到 http://service-ip:service-port/api/v1/?workspace=xxx&id=xxx
++ 授权
 
-在参数中给出工作区名和job的id。
+  ```shell
+  kubectl apply -f clusterrole.yaml
+  ```
 
 
 
+### 使用
+
++ 检测是否正常：
+
+  ``` shell
+  curl http://localhost:port/api/v1/nni-exp/hello
+  Hello world
+  ```
+
+  
+
++ 提交任务
+
+  目前用于测试的任务构建成了容器czh1998/nni-demo:0.3，提交一个任务需要向 http://localhost:port/api/v1/nni-exp发送post请求，并且request body中有如下信息:
+
+  ``` json
+  {
+      "user": "cuizihan",
+      "workspace": "test",
+      "trailConcurrency": 2,
+      "num": 8,
+      "target": "maximize",
+      "command": "python3 train.py",
+      "gpuNum": 0,
+      "search_space": {
+          "solver": {
+              "_type": "choice",
+              "_value": [
+                  "svd",
+                  "cholesky",
+                  "sparse_cg",
+                  "sag",
+                  "lsqr"
+              ]
+          },
+          "alpha": {
+              "_type": "choice",
+              "_value": [
+                  1,
+                  0.5,
+                  0.1,
+                  0.01,
+                  5
+              ]
+          },
+          "max_iter": {
+              "_type": "choice",
+              "_value": [
+                  1,
+                  10,
+                  100,
+                  1000,
+                  10000,
+                  300000
+              ]
+          }
+      }
+  }
+  ```
+
+  user和workspace以及其余和任务本身无关的参数可以改动
+
++ 获取数据
+
+  发送get请求到http://localhost:port/api/v1/nni-exp，请求体中需包含工作区和用户名
+
+  ``` json
+  {
+      "workspace": "test",
+      "user": "cuizihan"
+  }
+  ```
+
+  
