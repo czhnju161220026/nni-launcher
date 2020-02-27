@@ -36,15 +36,19 @@ func (j NNIExperiment) GetSearchSpaceJson() string {
 }
 
 func (j NNIExperiment) CreatePod(clientset *kubernetes.Clientset) (*apiv1.Pod, error) {
-	podsClient := clientset.CoreV1().Pods("nnijob")
+	podsClient := clientset.CoreV1().Pods("nni-exp")
 	newPod := &apiv1.Pod{
 		TypeMeta: v1.TypeMeta{
 			Kind:       "Pod",
 			APIVersion: "v1",
 		},
 		ObjectMeta: v1.ObjectMeta{
-			Name:      j.WorkSpace + "-" + j.ExpID,
-			Namespace: "nnijob",
+			Name:      j.User + "-" + j.WorkSpace + "-" + j.ExpID,
+			Namespace: "nni-exp",
+			Labels: map[string]string{
+				"user":      j.User,
+				"workspace": j.WorkSpace,
+			},
 		},
 		Spec: apiv1.PodSpec{
 			Containers: []apiv1.Container{
