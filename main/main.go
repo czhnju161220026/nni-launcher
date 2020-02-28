@@ -9,7 +9,6 @@ import (
 	"k8s.io/client-go/rest"
 	"log"
 	"net/http"
-	"os"
 )
 
 func main() {
@@ -36,11 +35,11 @@ func main() {
 	nnilauncher := myrest.NNILauncher{Clientset: clientset}
 
 	r := mux.NewRouter()
-	api := r.PathPrefix("/api/v1/nni-exp").Subrouter()
-	api.HandleFunc("", nnilauncher.SubmitExperiment).Methods(http.MethodPost)
-	api.HandleFunc("", nnilauncher.GetLog).Methods(http.MethodGet)
+	api := r.PathPrefix("/api/v1/nni-exp/").Subrouter()
+	api.HandleFunc("submit", nnilauncher.SubmitExperiment).Methods(http.MethodPost)
+	api.HandleFunc("logs", nnilauncher.GetLog).Methods(http.MethodPost)
 	// api.HandleFunc("", nnilauncher.DeleteExperiment).Methods(http.MethodDelete)
-	api.HandleFunc("/hello", func(writer http.ResponseWriter, request *http.Request) {
+	api.HandleFunc("hello", func(writer http.ResponseWriter, request *http.Request) {
 		fmt.Fprintf(writer, "%s", "Hello world")
 	})
 
@@ -48,11 +47,4 @@ func main() {
 	fmt.Printf("Listen on %s.\n", addr)
 	log.Fatal(http.ListenAndServe(addr, r))
 
-}
-
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
 }
