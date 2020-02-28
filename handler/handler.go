@@ -115,6 +115,7 @@ func fetchData(ip string) (string, error) {
 		go func(url string, index int) {
 			resp, err := http.Get(url)
 			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error when geting %s: %v", url, err)
 				done <- -1
 				return
 			}

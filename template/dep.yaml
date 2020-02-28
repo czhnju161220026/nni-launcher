@@ -17,7 +17,7 @@ spec:
         app: nni-manager-pod
     spec:
       containers:
-        - image: czh1998/nni-launcher:1.0
+        - image: registry.cn-hangzhou.aliyuncs.com/cuizihan/nni-launcher:1.2
           #- image: czh1998/hello-kube
           name: worker
           imagePullPolicy: IfNotPresent

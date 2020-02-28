@@ -35,11 +35,11 @@ func main() {
 	nnilauncher := myrest.NNILauncher{Clientset: clientset}
 
 	r := mux.NewRouter()
-	api := r.PathPrefix("/api/v1/nni-exp/").Subrouter()
-	api.HandleFunc("submit", nnilauncher.SubmitExperiment).Methods(http.MethodPost)
-	api.HandleFunc("logs", nnilauncher.GetLog).Methods(http.MethodPost)
+	api := r.PathPrefix("/api/v1/nni-exp").Subrouter()
+	api.HandleFunc("/submit", nnilauncher.SubmitExperiment).Methods(http.MethodPost)
+	api.HandleFunc("/logs", nnilauncher.GetLog).Methods(http.MethodPost)
 	// api.HandleFunc("", nnilauncher.DeleteExperiment).Methods(http.MethodDelete)
-	api.HandleFunc("hello", func(writer http.ResponseWriter, request *http.Request) {
+	api.HandleFunc("/hello", func(writer http.ResponseWriter, request *http.Request) {
 		fmt.Fprintf(writer, "%s", "Hello world")
 	})
 
