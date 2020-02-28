@@ -23,7 +23,7 @@
 
   ``` shell
   docker pull czh1998/nni-launcher:1.0
-  docker pull czh1998/nni-demo:0.3
+  docker pull czh1998/nnidemo:0.3
   ```
 
 + 创建命名空间
