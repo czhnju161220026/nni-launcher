@@ -47,17 +47,9 @@ func (l *NNILauncher) SubmitExperiment(w http.ResponseWriter, r *http.Request) {
 func (l *NNILauncher) GetLog(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("GetLog called")
 	w.Header().Set("Content-type", "application/json")
-	// workspaceName, userName := r.URL.Query().Get("workspace"), r.URL.Query().Get("user")
-	body, _ := ioutil.ReadAll(r.Body)
-	var info typed.QueryInfo
-	err := json.Unmarshal(body, &info)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "json unmarshal error:%v\n", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	expPods, err := l.Clientset.CoreV1().Pods("nni-exp").List(metav1.ListOptions{
-		LabelSelector: labels.Set{"user": info.User, "workspace": info.Workspace}.String(),
+	workspaceName, userName := r.URL.Query().Get("workspace"), r.URL.Query().Get("user")
+	expPods, err := l.Clientset.CoreV1().Pods("nni-resource").List(metav1.ListOptions{
+		LabelSelector: labels.Set{"user": userName, "workspace": workspaceName}.String(),
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "pod list error:%v\n", err)
@@ -85,22 +77,6 @@ func (l *NNILauncher) GetLog(w http.ResponseWriter, r *http.Request) {
 	res += "]"
 	fmt.Fprint(w, res)
 }
-
-// func (l *NNILauncher) DeleteExperiment(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Println("Delete called")
-// 	w.Header().Set("Content-type", "application/json")
-// 	podName := r.URL.Query().Get("workspace") + "-" + r.URL.Query().Get("id")
-// 	err := l.Clientset.CoreV1().Pods("nnijob").Delete(podName, &metav1.DeleteOptions{})
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusNotFound)
-// 		fmt.Fprintf(os.Stderr, "delete error: %v\n", err)
-// 		fmt.Fprint(w, `{"message":"delete pod failed"}`)
-// 		return
-// 	}
-// 	fmt.Printf("Delete pod:%s\n", podName)
-// 	w.WriteHeader(http.StatusOK)
-// 	fmt.Fprint(w, `{"message":"Delete succeed"}`)
-// }
 
 func fetchData(ip string) (string, error) {
 	routes := []string{

@@ -8,4 +8,4 @@ COPY typed /app/launcher/typed
 COPY vendor /app/launcher/vendor
 COPY go.mod /app/launcher/go.mod
 COPY go.sum /app/launcher/go.sum
-RUN cd launcher/main && go build main.go
+RUN cd launcher/main && go build -mod=vendor main.go
