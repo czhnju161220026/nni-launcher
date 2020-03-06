@@ -4,131 +4,129 @@
 
 主要分为如下部分：
 
-+ handler：处理请求，在handler.go中处理创建一个任务(Post)，请求任务的结果(Get)，删除一个任务(Delete)的请求。
++ handler：处理请求，在handler.go中处理创建一个任务(Post)，请求任务的结果(Get)的请求。
 + main：程序入口所在的包
 + typed：自定义的数据结构
-+ test：测试使用
 + vendor：依赖
-+ template：用于创建服务的一些yaml文件
++ template：用于创建服务的一些yaml文件，测试用
 
 
 
-## 用法
+## 测试
 
-### 准备
+目前nni-launcher暂时部署在n167集群中进行测试。在nni-resource的nni-launcher-svc下，通过nodePort 30497暴露服务。
 
-+ 需要Kubernetes集群
+### 测试提交功能
 
-+ 需要拉取镜像：
+可以发送包含类似如下请求体的post请求到 http://210.28.132.167:30497/api/v1/nni-exp/submit 开启一个tfoperator的调参任务
 
-  ``` shell
-  docker pull czh1998/nni-launcher:1.0
-  docker pull czh1998/nnidemo:0.3
-  ```
+``` json
+{
+    "user": "jack",
+    "workspace": "test",
+    "trailConcurrency": 2,
+    "num": 8,
+    "target": "maximize",
+    "command": "python3 mnist_tf.py",
+    "gpuNum": 1,
+    "trainer": "tf",
+    "search_space": {
+        "dropout_rate": {
+            "_type": "uniform",
+            "_value": [
+                0.5,
+                0.9
+            ]
+        },
+        "conv_size": {
+            "_type": "choice",
+            "_value": [
+                2,
+                3,
+                5,
+                7
+            ]
+        },
+        "hidden_size": {
+            "_type": "choice",
+            "_value": [
+                124,
+                512,
+                1024
+            ]
+        },
+        "batch_size": {
+            "_type": "choice",
+            "_value": [
+                1,
+                4,
+                8,
+                16,
+                32
+            ]
+        },
+        "learning_rate": {
+            "_type": "choice",
+            "_value": [
+                0.0001,
+                0.001,
+                0.01,
+                0.1
+            ]
+        }
+    }
+}
+```
 
-+ 创建命名空间
+或者发送
 
-  ``` shell
-  kubectl create namespace nni-resource
-  kubectl create namespace nni-exp # 提交的nni任务的pod都在这个空间里
-  ```
+``` json 
+{
+    "user": "jack",
+    "workspace": "test",
+    "trailConcurrency": 2,
+    "num": 8,
+    "target": "maximize",
+    "command": "python3 mnist_pt.py",
+    "gpuNum": 1,
+    "trainer": "pt",
+    "search_space": {
+        "epoch": {
+            "_type": "choice",
+            "_value": [
+                1,
+                3,
+                5,
+                7,
+                9
+            ]
+        },
+        "lr": {
+            "_type": "choice",
+            "_value": [
+                0.1,
+                0.01,
+                0.001
+            ]
+        },
+        "bz": {
+            "_type": "choice",
+            "_value": [
+                16,
+                32,
+                64,
+                128
+            ]
+        }
+    }
+}
+```
 
-+ 部署nni-launcher
-
-  ``` shell
-  # 找到位于template中的yaml文件
-  kubectl apply -f dep.yaml
-  kubectl apply -f service.yaml
-  
-  ```
-
-  创建service后，执行如下命令，查看服务从哪个端口暴露
-
-  ``` shell
-  kubectl get svc -n nni-resource
-  ```
-
-  
-
-+ 授权
-
-  ```shell
-  kubectl apply -f clusterrole.yaml
-  ```
+开启一个pytorch operator的调参任务。
 
 
 
-### 使用
+### 测试获取数据
 
-+ 检测是否正常：
+get http://210.28.132.167:30497/api/v1/nni-exp/logs?workspace=test&user=jack
 
-  ``` shell
-  curl http://localhost:port/api/v1/nni-exp/hello
-  Hello world
-  ```
-
-  
-
-+ 提交任务
-
-  目前用于测试的任务构建成了容器czh1998/nni-demo:0.3，提交一个任务需要向 http://localhost:port/api/v1/nni-exp发送post请求，并且request body中有如下信息:
-
-  ``` json
-  {
-      "user": "cuizihan",
-      "workspace": "test",
-      "trailConcurrency": 2,
-      "num": 8,
-      "target": "maximize",
-      "command": "python3 train.py",
-      "gpuNum": 0,
-      "search_space": {
-          "solver": {
-              "_type": "choice",
-              "_value": [
-                  "svd",
-                  "cholesky",
-                  "sparse_cg",
-                  "sag",
-                  "lsqr"
-              ]
-          },
-          "alpha": {
-              "_type": "choice",
-              "_value": [
-                  1,
-                  0.5,
-                  0.1,
-                  0.01,
-                  5
-              ]
-          },
-          "max_iter": {
-              "_type": "choice",
-              "_value": [
-                  1,
-                  10,
-                  100,
-                  1000,
-                  10000,
-                  300000
-              ]
-          }
-      }
-  }
-  ```
-
-  user和workspace以及其余和任务本身无关的参数可以改动
-
-+ 获取数据
-
-  发送get请求到http://localhost:port/api/v1/nni-exp，请求体中需包含工作区和用户名
-
-  ``` json
-  {
-      "workspace": "test",
-      "user": "cuizihan"
-  }
-  ```
-
-  

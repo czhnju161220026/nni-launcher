@@ -9,6 +9,11 @@ import (
 	"os"
 )
 
+// 这里定义了一组常量
+// 这组常量根据不同的集群配置需要变动
+// 分别是用于提供nni-manager储存的NFS的server和path
+// 还有训练任务的容器使用的基础镜像，该镜像必须安装 nni1.3
+// 可以通过pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple nni==1.3 进行安装
 const (
 	NfsServer = "210.28.132.167"
 	NfsPath   = "/data/nfs/nni_storage"
@@ -42,6 +47,11 @@ func (e NNIExperiment) GetSearchSpaceJson() string {
 	return string(res)
 }
 
+// 根据experiment的信息，创建nni manager pod
+// 1. 这里指定namespace为nni-resource，也可以是其他具有create 和 get 权限的namespace
+// 2. 通过设定label中的user和workspace，在GetLog的时候可以进行筛选
+// 3. 这里使用的镜像是nni-manager:test，该镜像中已经打包了测试用的代码和数据
+//    TODO: 部署的时候，要使用nni-manager:0.1, 并在这里将代码和数据都挂载到/exp目录下
 func (e NNIExperiment) CreatePod(clientset *kubernetes.Clientset) (*apiv1.Pod, error) {
 	podsClient := clientset.CoreV1().Pods("nni-resource")
 	newPod := &apiv1.Pod{

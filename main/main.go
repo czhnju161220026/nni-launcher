@@ -22,10 +22,11 @@ func main() {
 	}
 	nnilauncher := myrest.NNILauncher{Clientset: clientset}
 	r := mux.NewRouter()
+	// SubmitExperiment和GetLog是主要的接口
+	// 分别用于提交调参任务和获取任务的数据
 	api := r.PathPrefix("/api/v1/nni-exp").Subrouter()
 	api.HandleFunc("/submit", nnilauncher.SubmitExperiment).Methods(http.MethodPost)
 	api.HandleFunc("/logs", nnilauncher.GetLog).Methods(http.MethodGet)
-	// api.HandleFunc("", nnilauncher.DeleteExperiment).Methods(http.MethodDelete)
 	api.HandleFunc("/hello", func(writer http.ResponseWriter, request *http.Request) {
 		fmt.Fprintf(writer, "%s\n", "Hello world")
 	})

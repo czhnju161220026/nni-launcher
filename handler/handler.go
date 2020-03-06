@@ -15,11 +15,14 @@ import (
 	"time"
 )
 
-// PodIPCache给出了任务名到Pod ip到映射
+// NNILauncher只有一个成员变量，是用于操作集群的clientset
 type NNILauncher struct {
 	Clientset *kubernetes.Clientset
 }
 
+// SubmitExperiment解析requestBody,分配实验的ID
+// 调用NNIExperiment.CreatePod来创建 nni-manager pod
+// 之后的调度以及调参，交给nni-manager进行
 func (l *NNILauncher) SubmitExperiment(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Submit called")
 	w.Header().Set("Content-type", "application/json")
@@ -44,6 +47,11 @@ func (l *NNILauncher) SubmitExperiment(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, `{"message":"Submit called"}`)
 }
 
+// GetLog根据workspace和user，返回该user的某个workspace下的所有experiment的进度数据
+// 之后考虑优化为根据每个experiemt的id返回单独的实验进度
+// GetLog根据pod label查询出该workspace的experiemt对应的所有nni-manager pod
+// 然后根据pod ip，请求每个nni experiment的数据
+// 最后组合在一起返回
 func (l *NNILauncher) GetLog(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("GetLog called")
 	w.Header().Set("Content-type", "application/json")
@@ -78,6 +86,8 @@ func (l *NNILauncher) GetLog(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, res)
 }
 
+// 向某个nni-manager请求实验数据
+// 包括四个url
 func fetchData(ip string) (string, error) {
 	routes := []string{
 		"/api/v1/nni/metric-data",
@@ -122,6 +132,7 @@ func fetchData(ip string) (string, error) {
 
 var alphabet = "abcdefghijklmnopqrstuvwxyz1234567890"
 
+// 生成随机id
 func generateId() string {
 	rand.Seed(time.Now().Unix())
 	id := make([]byte, 8)
